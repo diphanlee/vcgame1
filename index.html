@@ -1,34 +1,19 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f6efe5" />
-  <title>오늘의 카페 | 미니 경영 게임</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>오늘의 카페 | 손님 맞이하기</title>
+  <link rel="stylesheet" href="style.css"><script src="script.js" defer></script>
 </head>
 <body>
-  <main class="game-shell">
-    <header class="topbar">
-      <div class="brand"><span class="brand-icon" aria-hidden="true">☕</span><div><p class="eyebrow">ONE DAY CAFE</p><h1>오늘의 카페</h1></div></div>
-      <button class="restart-button" id="restartBtn" type="button">↻ 다시 시작</button>
-    </header>
-
-    <section class="intro" aria-label="게임 설명">
-      <div><span class="pill">MINI MANAGEMENT GAME</span><h2>오늘의 주문을<br><em>현명하게</em> 선택하세요.</h2><p>한정된 재료로 가장 높은 매출을 만들어 보세요.<br>주문 카드를 클릭하면 즉시 판매됩니다.</p></div>
-      <div class="intro-illustration" aria-hidden="true"><span>🥐</span><span>☕</span><span>🍪</span></div>
-    </section>
-
-    <section class="dashboard" aria-label="영업 현황">
-      <div class="sales-panel"><div class="section-label">TODAY'S SALES <span>오늘의 매출</span></div><div class="sales-number"><strong id="salesValue">0</strong><span>원</span></div><div class="progress-track" role="progressbar" aria-label="목표 매출 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="salesProgress"><div class="progress-fill" id="progressFill"></div></div><div class="sales-foot"><span>목표 <b id="targetValue">24,000원</b></span><span id="progressText">0%</span></div></div>
-      <div class="status-panel"><div class="section-label">INVENTORY <span>남은 재료</span></div><div class="inventory-row"><span>🫘 커피 원액</span><strong><span id="coffeeValue">9</span> <small>/ 9</small></strong></div><div class="inventory-row"><span>🥛 우유</span><strong><span id="milkValue">5</span> <small>/ 5</small></strong></div><div class="inventory-divider"></div><div class="inventory-row orders-count"><span>처리한 주문</span><strong><span id="servedValue">0</span> <small>/ 6</small></strong></div></div>
-    </section>
-
-    <section class="orders-section" aria-labelledby="ordersHeading"><div class="section-heading"><div><p class="eyebrow">ORDER BOARD</p><h2 id="ordersHeading">대기 중인 주문 <span>3</span></h2></div><span class="order-tip">카드를 눌러 주문 처리 ↗</span></div><div id="ordersList" class="orders-list" aria-live="polite"></div></section>
-    <footer class="footer"><span>☕ 작은 선택이 오늘의 매출을 바꿉니다.</span><span>Made with HTML · CSS · JavaScript</span></footer>
-  </main>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div class="modal-backdrop hidden" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result-card"><div class="result-emoji" id="resultEmoji">🎉</div><p class="eyebrow">CLOSING TIME</p><h2 id="resultTitle">영업 성공!</h2><p id="resultDescription"></p><div class="result-total">최종 매출 <strong id="finalSales">0원</strong></div><button id="playAgainBtn" type="button">다시 도전하기 →</button></div></div>
-</body>
-</html>
+<main class="shell">
+  <header class="top"><div><div class="eyebrow">ONE DAY CAFE · MINI GAME</div><h1>☕ 오늘의 카페</h1></div><button id="restartBtn" class="ghost" type="button">↻ 다시 시작</button></header>
+  <section class="hero"><div><span class="tag">OPEN 09:00</span><h2>손님을 맞이하고<br>음료를 직접 만들어 주세요!</h2><p>손님을 선택하고 재료를 눌러 레시피대로 제조하세요.<br>완성된 음료를 전달하면 손님이 떠나고 다음 손님이 입장합니다.</p></div><div class="hero-icon" aria-hidden="true">🏡☕</div></section>
+  <section class="stats" aria-label="영업 현황"><div class="stat"><small>오늘의 매출</small><strong><span id="salesValue">0</span>원</strong><div class="bar"><div id="progressFill"></div></div><small>목표 <span id="targetValue">24,000원</span></small></div><div class="stat"><small>남은 재료</small><div class="stock"><span>🫘 커피 원액</span><b><span id="coffeeValue">9</span> / 9</b></div><div class="stock"><span>🥛 우유</span><b><span id="milkValue">5</span> / 5</b></div></div><div class="stat"><small>처리한 주문</small><strong><span id="servedValue">0</span> / 6</strong><small>6건 안에 목표 매출 달성</small></div></section>
+  <section class="room"><div class="section-head"><div><span class="eyebrow">CUSTOMER LOUNGE</span><h2>카페에 온 손님 <span class="muted">3명</span></h2></div><small>손님 카드를 클릭해 주문 선택</small></div><div id="customers" class="customers" aria-label="대기 손님"></div></section>
+  <section class="workbench"><div class="section-head"><div><span class="eyebrow">BARISTA STATION</span><h2>음료 제조대</h2></div><span id="selectedLabel" class="selection">손님을 선택해 주세요</span></div><div class="bench-grid"><div class="ingredients"><h3>① 재료 선택</h3><p>누를 때마다 재료가 한 단위씩 컵에 들어갑니다.</p><button id="addCoffee" class="ingredient" type="button"><span class="ingredient-icon">🫘</span><span>커피 원액<small>1개 넣기</small></span><span class="plus">＋</span></button><button id="addMilk" class="ingredient" type="button"><span class="ingredient-icon">🥛</span><span>우유<small>1개 붓기</small></span><span class="plus">＋</span></button></div><div class="craft"><h3>② 음료 만들기</h3><div class="cup-stage" id="cupStage"><div class="cup-wrap"><div class="cup" id="cup"><div class="liquid coffee-liquid" id="coffeeLiquid"></div><div class="liquid milk-liquid" id="milkLiquid"></div><div class="pour" id="pour"></div></div><div class="cup-handle"></div></div><div class="steam">♨</div></div><div class="cup-count" id="cupCount">컵이 비어 있습니다</div><div class="actions"><button id="resetCup" class="ghost" type="button">재료 되돌리기</button><button id="serveBtn" class="primary" type="button">음료 전달하기 →</button></div></div></div><p class="hint" id="hint" role="status" aria-live="polite">손님을 선택하면 필요한 재료가 표시됩니다.</p></section>
+  <footer>Made with HTML · CSS · JavaScript · 별도 서버 불필요</footer>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="resultModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result"><div id="resultEmoji" class="result-emoji">🎉</div><span class="eyebrow">CLOSING TIME</span><h2 id="resultTitle">영업 성공!</h2><p id="resultDescription"></p><strong id="finalSales"></strong><button id="playAgainBtn" class="primary" type="button">다시 도전하기 ↻</button></div></div>
+</body></html>
