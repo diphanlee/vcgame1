@@ -1,6 +1,122 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오늘의 카페 | 미니게임</title><link rel="stylesheet" href="style.css"><script defer src="script.js"></script></head><body>
-<main class="app"><header class="top"><div><p class="overline">ONE DAY CAFE · MINI GAME</p><h1>☕ 오늘의 카페</h1></div><button id="restartBtn" class="outline">↻ 다시 시작</button></header>
-<section class="hud"><div class="metric"><span>현재 매출</span><strong id="salesValue">0원</strong><div class="track"><div id="progressFill"></div></div><small>목표 <b id="targetValue">24,000원</b></small></div><div class="metric"><span>완료한 주문</span><strong id="servedValue">0 / 6</strong><small>목표 매출을 달성하면 승리!</small></div><div class="metric help"><b>게임 방법</b><small>① 손님 선택 → ② 재료 넣기 → ③ 음료 전달</small><small>재료는 한 번 누를 때마다 1개씩 소모됩니다.</small></div></section>
-<section class="lounge"><div class="section-title"><div><p class="overline">CUSTOMERS</p><h2>카페에 온 손님 <span class="muted">3명</span></h2></div><span class="tiny">손님 이미지를 눌러 주문을 선택하세요</span></div><div id="customers" class="customers" aria-label="손님 세 명"></div></section>
-<section class="station"><div class="section-title"><div><p class="overline">BARISTA STATION</p><h2>음료 제조대</h2></div><span id="selectedLabel" class="pill">손님을 선택해 주세요</span></div><div class="station-grid"><div class="stock-panel"><h3>① 재료 선택 <small>현재 재고</small></h3><button id="addCoffee" class="ingredient" type="button"><span class="ing-emoji">🫘</span><span class="ing-name">커피 원액<small>클릭하여 1개 넣기</small></span><strong class="ing-count" id="coffeeValue">9개</strong><span class="plus">＋</span></button><button id="addMilk" class="ingredient" type="button"><span class="ing-emoji">🥛</span><span class="ing-name">우유<small>클릭하여 1개 넣기</small></span><strong class="ing-count" id="milkValue">5개</strong><span class="plus">＋</span></button><div class="stock-tip">💡 재료를 넣으면 이곳의 재고가 즉시 줄어듭니다.</div></div><div class="make-panel"><h3>② 음료 만들기 <span id="recipeText" class="recipe-inline">손님을 먼저 선택하세요</span></h3><div class="cup-stage"><div id="drinkVisual" class="drink-visual empty-drink"><div class="drink-handle"></div><div class="drink-glass"><div class="drink-layer" id="drinkLayer"></div><div class="drink-foam" id="drinkFoam"></div><div class="latte-art" id="latteArt">♥</div><div class="drink-ice">✧ ✦</div></div><div class="drink-saucer"></div></div><div id="pour" class="pour-effect"></div><span id="drinkCaption" class="drink-caption">빈 컵</span></div><p id="cupCount" class="cup-count">🫘 커피 0개 · 🥛 우유 0개</p><div class="actions"><button id="resetCup" class="outline">재료 되돌리기</button><button id="serveBtn" class="primary">음료 전달하기 →</button></div></div></div><p id="hint" class="hint" role="status" aria-live="polite">손님을 선택하면 레시피가 표시됩니다.</p></section><footer>HTML · CSS · JavaScript | 인터넷 연결 없이 실행 가능</footer></main>
-<div id="toast" class="toast" role="status" aria-live="polite"></div><div id="resultModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result"><div id="resultEmoji" class="result-emoji">🎉</div><p class="overline">CLOSING TIME</p><h2 id="resultTitle">영업 성공!</h2><p id="resultDescription"></p><strong id="finalSales"></strong><button id="playAgainBtn" class="primary">다시 도전하기 ↻</button></div></div></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>오늘의 카페 | ONE DAY CAFE</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section class="cover-screen" id="coverScreen" aria-label="오늘의 카페 메인 화면">
+  <div class="cover-shade"></div>
+  <div class="cover-card">
+    <div class="cover-logo">
+      <div class="cover-title">☕ 오늘의 카페</div>
+      <div class="cover-subtitle">ONE DAY CAFE</div>
+    </div>
+    <div class="cover-actions">
+      <button id="coverHelpBtn" class="cover-btn cover-help" type="button">📖 게임 방법</button>
+      <button id="coverStartBtn" class="cover-btn cover-start" type="button">☕ 게임 시작</button>
+    </div>
+  </div>
+</section>
+
+<main class="game hidden" id="game">
+  <section class="scene" aria-label="카페 손님 영역">
+    <div class="brand"><div class="brand-k">☕ 오늘의 카페</div><small>ONE DAY CAFE</small></div>
+    <button class="settings ui-sfx" id="settingsBtn" aria-label="설정 열기">⚙</button>
+    <div class="settings-menu hidden" id="settingsMenu">
+      <button class="ui-sfx" id="helpBtn">📖 게임 방법</button>
+      <button class="ui-sfx" id="soundBtn">♫ 효과음: 켜짐</button>
+    </div>
+
+    <aside class="score-board" id="scoreBoard">
+      <div class="stage-row"><strong id="stageName">1단계</strong><span id="timerText">00:00</span></div>
+      <div class="progress-dots" id="progressDots" aria-label="단계 진행도"></div>
+      <p>단계 목표 <b id="goalRevenue">18,000원</b></p>
+      <p>현재 매출 <b id="revenue">0원</b></p>
+      <p>처리 주문 <b id="served">0 / 6</b></p>
+      <p>되돌리기 <b id="undoCount">3 / 3</b></p>
+      <button id="restartBoardBtn" class="board-restart ui-sfx" type="button">↻ 처음부터 다시하기</button>
+    </aside>
+    <div class="guests" id="guests" aria-label="손님 세 명"></div>
+  </section>
+
+  <section class="counter">
+    <section class="inventory panel" id="inventoryPanel">
+      <h2>☕ 재료 현황</h2>
+      <p class="hint">재료 이미지를 누르면 컵에 추가됩니다.</p>
+      <div id="ingredients" class="ingredient-list"></div>
+      <button id="resetCup" class="secondary ui-sfx">↶ 컵 비우기 · 재고 복구</button>
+    </section>
+
+    <section class="station panel" id="stationPanel">
+      <div class="station-head">
+        <h2>☕ 음료 제조대</h2>
+        <span id="stageHint">1단계 · 기본 영업</span>
+      </div>
+      <div class="station-grid">
+        <div class="mix">
+          <div class="mix-top">
+            <span id="mixTitle">제조 중 · 자유 제조</span>
+            <button id="undoBtn" class="mini-btn ui-sfx">↶ 한 단계 취소</button>
+          </div>
+          <div class="cup-area" id="cupArea">
+            <div class="cup" id="cup"><div class="cup-liquid" id="cupLiquid"></div><div class="cup-foam" id="cupFoam"></div><div class="cup-mark">ONE DAY</div></div>
+            <div id="pour" class="pour hidden"></div>
+          </div>
+          <div id="mixInfo" class="mix-info">빈 컵 · 만들고 싶은 메뉴의 재료를 넣어 주세요.</div>
+        </div>
+        <div class="finished" id="finishedPanel">
+          <h3>☕ 제조된 음료</h3>
+          <div id="finishedArt" class="finished-art"><span class="empty-cup">☕</span></div>
+          <strong id="finishedName">음료 제조 대기</strong>
+          <button id="serveBtn" class="primary" disabled>☕ 음료 전달하기 →</button>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </section>
+  </section>
+</main>
+
+<section class="ranking-section hidden" id="rankingSection" aria-labelledby="rankingTitle">
+  <div class="ranking-card">
+    <div class="ranking-head">
+      <div><h2 id="rankingTitle">🏆 랭킹 TOP 10</h2><p>플레이 후 닉네임을 등록하면 이 브라우저의 기록이 여기에 표시됩니다.</p></div>
+      <button id="clearRankingBtn" class="ranking-clear ui-sfx" type="button">내 브라우저 랭킹 초기화</button>
+    </div>
+    <div class="ranking-table-wrap" id="globalRankingArea"></div>
+    <p class="ranking-note">※ 현재 랭킹은 서버 없이 브라우저의 localStorage에 저장되는 로컬 랭킹입니다.</p>
+  </div>
+</section>
+
+<div class="modal-layer hidden" id="modalLayer">
+  <div class="modal start-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close ui-sfx hidden" id="modalClose" aria-label="닫기">×</button>
+    <h2 id="modalTitle">☕ 오늘의 카페</h2>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions">
+      <button class="secondary start-choice" id="modalHelpBtn" type="button">📖 게임 방법</button>
+      <button class="primary start-choice" id="modalConfirm" type="button">☕ 게임 시작</button>
+    </div>
+  </div>
+</div>
+
+<div class="tutorial-layer hidden" id="tutorialLayer" aria-live="polite">
+  <div class="tutorial-dim"></div>
+  <div class="tutorial-card" id="tutorialCard">
+    <div class="tutorial-step" id="tutorialStep">1 / 5</div>
+    <h3 id="tutorialTitle">손님 주문 확인</h3>
+    <p id="tutorialText">상단 말풍선에서 손님들의 메뉴와 필요한 재료를 확인하세요.</p>
+    <small>강조된 영역을 직접 클릭하거나 ‘다음’ 버튼을 눌러 다음 설명으로 넘어갈 수 있습니다.</small>
+    <div class="tutorial-actions">
+      <button id="tutorialNext" class="tutorial-next" type="button">다음</button>
+      <button id="tutorialExit" class="tutorial-exit" type="button">튜토리얼 종료</button>
+    </div>
+  </div>
+  <div class="tutorial-highlight" id="tutorialHighlight" tabindex="0" role="button" aria-label="튜토리얼 다음 단계"></div>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
