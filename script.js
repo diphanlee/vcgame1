@@ -31,8 +31,16 @@ const ENDLESS_SECONDS = 60;
 const RANK_KEY = 'oneDayCafeRankingsV1';
 const AUDIO_KEY = 'oneDayCafeAudioSettingsV1';
 
-const SFX = Object.fromEntries(['button','order','ingredient','sale','stage','finish'].map(name=>[name,new Audio(`assets/sounds/${name}.wav`)]));
-const BGM = new Audio('assets/music/cafe_bgm.wav');
+const assetUrl = path => new URL(path, document.baseURI).href;
+const SFX = Object.fromEntries(['button','order','ingredient','sale','stage','finish'].map(name=>[name,new Audio(assetUrl(`assets/sounds/${name}.wav`))]));
+const BGM = new Audio();
+const BGM_SOURCES = [
+  assetUrl('assets/music/cafe_bgm.mp3'),
+  assetUrl('assets/music/cafe_bgm.ogg'),
+  assetUrl('assets/music/cafe_bgm.wav')
+];
+let bgmSourceIndex=0,bgmFallbackActive=false,bgmFallbackTimer=null,bgmFallbackCtx=null,bgmFallbackGain=null;
+BGM.src=BGM_SOURCES[bgmSourceIndex];
 BGM.loop=true;BGM.preload='auto';
 let sfxVolume=.58,bgmVolume=.24,bgmEnabled=true;
 Object.values(SFX).forEach(a=>{a.preload='auto';a.volume=sfxVolume});
@@ -70,6 +78,7 @@ function saveAudioSettings(){
 function applyAudioSettings(){
   Object.values(SFX).forEach(a=>a.volume=sfxVolume);
   BGM.volume=bgmVolume;
+  if(bgmFallbackGain)bgmFallbackGain.gain.value=Math.max(0.0001,bgmVolume*.14);
   if($('soundBtn'))$('soundBtn').textContent='♫ 효과음: '+(sound?'켜짐':'꺼짐');
   if($('bgmBtn'))$('bgmBtn').textContent='♬ 배경음악: '+(bgmEnabled?'켜짐':'꺼짐');
   if($('sfxVolume'))$('sfxVolume').value=String(Math.round(sfxVolume*100));
@@ -77,15 +86,64 @@ function applyAudioSettings(){
   if($('sfxVolumeValue'))$('sfxVolumeValue').textContent=Math.round(sfxVolume*100)+'%';
   if($('bgmVolumeValue'))$('bgmVolumeValue').textContent=Math.round(bgmVolume*100)+'%';
 }
+function stopFallbackBgm(){
+  bgmFallbackActive=false;
+  if(bgmFallbackTimer){clearTimeout(bgmFallbackTimer);bgmFallbackTimer=null}
+  if(bgmFallbackCtx){try{bgmFallbackCtx.close()}catch(e){};bgmFallbackCtx=null;bgmFallbackGain=null}
+}
+function startFallbackBgm(){
+  if(!bgmEnabled||bgmFallbackActive)return;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return;
+  bgmFallbackCtx=new AC();
+  bgmFallbackGain=bgmFallbackCtx.createGain();
+  bgmFallbackGain.gain.value=Math.max(0.0001,bgmVolume*.14);
+  bgmFallbackGain.connect(bgmFallbackCtx.destination);
+  bgmFallbackActive=true;
+  const chords=[[261.63,329.63,392],[220,277.18,329.63],[196,246.94,293.66],[174.61,220,261.63]];
+  let step=0;
+  const schedule=()=>{
+    if(!bgmFallbackActive||!bgmEnabled||!bgmFallbackCtx)return;
+    const now=bgmFallbackCtx.currentTime+.03;
+    const chord=chords[step%chords.length];
+    chord.forEach((freq,i)=>{
+      const osc=bgmFallbackCtx.createOscillator(),g=bgmFallbackCtx.createGain();
+      osc.type=i===0?'sine':'triangle';osc.frequency.value=freq;
+      g.gain.setValueAtTime(0,now);
+      g.gain.linearRampToValueAtTime(i===0?.035:.018,now+.12);
+      g.gain.exponentialRampToValueAtTime(.0001,now+2.8);
+      osc.connect(g);g.connect(bgmFallbackGain);osc.start(now);osc.stop(now+3);
+    });
+    step++;
+    bgmFallbackTimer=setTimeout(schedule,2800);
+  };
+  if(bgmFallbackCtx.state==='suspended')bgmFallbackCtx.resume().then(schedule).catch(()=>{});else schedule();
+}
+function advanceBgmSource(){
+  bgmSourceIndex++;
+  if(bgmSourceIndex>=BGM_SOURCES.length){
+    startFallbackBgm();
+    return false;
+  }
+  BGM.src=BGM_SOURCES[bgmSourceIndex];
+  BGM.load();
+  return true;
+}
 function tryStartBgm(){
   if(!bgmEnabled)return;
+  if(bgmFallbackActive){if(bgmFallbackGain)bgmFallbackGain.gain.value=Math.max(0.0001,bgmVolume*.14);return}
   BGM.volume=bgmVolume;
   const p=BGM.play();
-  if(p&&p.catch)p.catch(()=>{});
+  if(p&&p.catch)p.catch(err=>{
+    // NotAllowedError는 사용자 입력 전 자동재생 차단이므로 소스 교체를 하지 않는다.
+    if(err&&err.name==='NotAllowedError')return;
+    if(advanceBgmSource())tryStartBgm();
+  });
 }
+BGM.addEventListener('error',()=>{if(bgmEnabled&&!BGM.paused){if(advanceBgmSource())tryStartBgm();}});
 function setBgmEnabled(enabled){
   bgmEnabled=enabled;
-  if(bgmEnabled)tryStartBgm();else BGM.pause();
+  if(bgmEnabled)tryStartBgm();else{BGM.pause();stopFallbackBgm()}
   applyAudioSettings();saveAudioSettings();
 }
 function playSfx(name){if(!sound||!SFX[name])return;const a=SFX[name];a.volume=sfxVolume;a.currentTime=0;a.play().catch(()=>{})}
