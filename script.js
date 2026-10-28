@@ -189,9 +189,25 @@ function setModalStartLayout(isStart){
   document.querySelector('.modal').classList.toggle('start-modal',isStart);
 }
 
+
+const GAME_DESIGN_WIDTH=1600;
+const GAME_DESIGN_HEIGHT=900;
+function fitGameCanvas(){
+  const shell=$('gameScaleShell');
+  const game=$('game');
+  if(!shell||!game)return;
+  const availableW=Math.max(320,window.innerWidth);
+  const availableH=Math.max(420,window.innerHeight);
+  const scale=Math.min(1,availableW/GAME_DESIGN_WIDTH,availableH/GAME_DESIGN_HEIGHT);
+  shell.style.width=`${Math.round(GAME_DESIGN_WIDTH*scale)}px`;
+  shell.style.height=`${Math.round(GAME_DESIGN_HEIGHT*scale)}px`;
+  game.style.transform=`scale(${scale})`;
+}
+
 function showCover(){
   stopTimer();
   $('coverScreen').classList.remove('hidden');
+  $('gameScaleShell').classList.add('hidden');
   $('game').classList.add('hidden');
   $('rankingSection').classList.add('hidden');
   $('modalLayer').classList.add('hidden');
@@ -200,7 +216,9 @@ function showCover(){
 }
 function showGameShell(){
   $('coverScreen').classList.add('hidden');
+  $('gameScaleShell').classList.remove('hidden');
   $('game').classList.remove('hidden');
+  fitGameCanvas();
   $('rankingSection').classList.remove('hidden');
   window.scrollTo({top:0,behavior:'auto'});
 }
@@ -271,9 +289,10 @@ $('tutorialHighlight').addEventListener('click',tutorialNext);
 $('tutorialHighlight').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tutorialNext()}});
 $('tutorialNext').addEventListener('click',tutorialNext);
 $('tutorialExit').addEventListener('click',finishTutorial);
-window.addEventListener('resize',()=>{if(tutorialIndex>=0)positionTutorial()});
+window.addEventListener('resize',()=>{fitGameCanvas();if(tutorialIndex>=0)positionTutorial()});
 window.addEventListener('scroll',()=>{if(tutorialIndex>=0)positionTutorial()},{passive:true});
 document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('#serveBtn,#resetCup,#undoBtn,#restartBoardBtn,#settingsBtn,#helpBtn,#soundBtn,#modalHelpBtn,#modalConfirm,#modalClose,#rankSubmit,#clearRankingBtn,#tutorialNext,#tutorialExit,.ingredient'))playSfx('button')});
 
 resetGame();
+fitGameCanvas();
 showCover();

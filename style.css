@@ -47,3 +47,36 @@ body{overflow-x:hidden;overflow-y:auto;background:#2d1a12}
 .cover-logo{margin-bottom:30px}.cover-title{font-size:clamp(34px,6vw,58px);font-weight:900;color:#5e3825;letter-spacing:-2px}.cover-subtitle{margin-top:8px;font-size:13px;font-weight:800;letter-spacing:7px;color:#95684c}
 .cover-actions{display:grid;gap:14px;max-width:330px;margin:0 auto}.cover-btn{width:100%;border-radius:14px;padding:15px 18px;font-weight:900;font-size:18px;transition:transform .15s,filter .15s,box-shadow .15s}.cover-btn:hover{transform:translateY(-2px)}.cover-help{border:2px solid #9a6a49;background:#fff2e1;color:#68432e}.cover-start{border:0;background:#75442a;color:#fff;box-shadow:0 5px 0 #4b2919}.cover-start:hover{filter:brightness(1.08)}
 @media(max-width:600px){.cover-card{padding:30px 20px 26px}.cover-title{font-size:36px}.cover-subtitle{font-size:10px;letter-spacing:5px}.cover-btn{font-size:16px;padding:13px}}
+\n\n/* v14: fixed-ratio game canvas. Browser zoom scales the whole game instead of reflowing it. */
+.game-scale-shell{position:relative;margin:0 auto;overflow:hidden;background:#2d1a12}
+.game-scale-shell.hidden{display:none!important}
+.game-scale-shell .game{position:absolute!important;left:0!important;top:0!important;width:1600px!important;height:900px!important;min-height:900px!important;margin:0!important;grid-template-rows:414px 486px!important;transform-origin:top left!important;overflow:hidden!important}
+.game-scale-shell .scene{height:auto!important}
+.game-scale-shell .counter{grid-template-columns:270px minmax(0,1fr)!important;padding:11px!important;gap:10px!important}
+.game-scale-shell .score-board{top:120px!important;left:20px!important;width:245px!important;padding:11px 15px!important}
+.game-scale-shell .score-board p,.game-scale-shell .score-board b{font-size:13px!important}
+.game-scale-shell .guests{left:285px!important;right:14px!important;height:94%!important;bottom:0!important;gap:16px!important}
+.game-scale-shell .speech{min-height:104px!important;border-radius:38px!important;padding:8px 10px!important;gap:9px!important}
+.game-scale-shell .speech .drink-icon{width:78px!important;height:78px!important}
+.game-scale-shell .speech b{font-size:18px!important}
+.game-scale-shell .speech small{font-size:11px!important}
+.game-scale-shell .order-ingredient img{width:22px!important;height:22px!important}
+.game-scale-shell .portrait-wrap{top:116px!important}
+.game-scale-shell .portrait{max-width:100%!important}
+.game-scale-shell .ingredient-list{grid-template-columns:1fr!important}
+.game-scale-shell .ingredient{flex-direction:row!important;text-align:left!important;min-height:72px!important;padding:7px 10px!important}
+.game-scale-shell .ingredient-image-wrap{width:66px!important;height:58px!important;flex:0 0 66px!important}
+.game-scale-shell .ingredient img{width:58px!important;height:54px!important}
+.game-scale-shell .ingredient .count{font-size:18px!important}
+.game-scale-shell .station-grid{grid-template-columns:1.2fr .8fr!important}
+.game-scale-shell .rank-form{grid-template-columns:1fr auto!important}
+.ranking-section{max-width:1600px;margin:0 auto}
+
+/* v15: keep the fixed-ratio game canvas horizontally centered at every browser width/zoom. */
+.game-scale-shell{
+  position:relative!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
