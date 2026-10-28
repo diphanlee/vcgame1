@@ -80,3 +80,6 @@ body{overflow-x:hidden;overflow-y:auto;background:#2d1a12}
   margin-left:0!important;
   margin-right:0!important;
 }
+
+/* v16 audio settings */
+.audio-control{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:8px 10px;border-radius:8px;color:#5b3824;font-size:12px;font-weight:700}.audio-control:hover{background:#f3dfca}.audio-control output{font-variant-numeric:tabular-nums;color:#8b6245}.audio-control input[type=range]{grid-column:1/-1;width:100%;accent-color:#8b5a3c;cursor:pointer}.settings-menu{min-width:220px}.settings-menu .audio-control+button{margin-top:2px}

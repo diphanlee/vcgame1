@@ -29,9 +29,14 @@ const STAGES = [
 const ENDLESS = {name:'무한 모드',hint:'60초 추가 영업',undoLimit:2,stock:{coffee:20,milk:12,caramel:8,cream:8}};
 const ENDLESS_SECONDS = 60;
 const RANK_KEY = 'oneDayCafeRankingsV1';
+const AUDIO_KEY = 'oneDayCafeAudioSettingsV1';
 
 const SFX = Object.fromEntries(['button','order','ingredient','sale','stage','finish'].map(name=>[name,new Audio(`assets/sounds/${name}.wav`)]));
-Object.values(SFX).forEach(a=>{a.preload='auto';a.volume=.58});
+const BGM = new Audio('assets/music/cafe_bgm.wav');
+BGM.loop=true;BGM.preload='auto';
+let sfxVolume=.58,bgmVolume=.24,bgmEnabled=true;
+Object.values(SFX).forEach(a=>{a.preload='auto';a.volume=sfxVolume});
+BGM.volume=bgmVolume;
 
 let stock={},cup={},history=[],guests=[];
 let stageIndex=0,served=0,stageRevenue=0,totalRevenue=0;
@@ -48,7 +53,42 @@ const recipeKey=recipe=>Object.keys(ITEMS).map(k=>recipe[k]||0).join('|');
 const matchedMenu=()=>MENU.find(m=>recipeKey(m.recipe)===recipeKey(cup))||null;
 const matchingGuestIndexes=menu=>menu?guests.map((g,i)=>g.menuId===menu.id?i:-1).filter(i=>i>=0):[];
 
-function playSfx(name){if(!sound||!SFX[name])return;const a=SFX[name];a.currentTime=0;a.play().catch(()=>{})}
+function loadAudioSettings(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(AUDIO_KEY)||'null');
+    if(saved){
+      if(typeof saved.sound==='boolean')sound=saved.sound;
+      if(typeof saved.bgmEnabled==='boolean')bgmEnabled=saved.bgmEnabled;
+      if(Number.isFinite(saved.sfxVolume))sfxVolume=Math.min(1,Math.max(0,saved.sfxVolume));
+      if(Number.isFinite(saved.bgmVolume))bgmVolume=Math.min(1,Math.max(0,saved.bgmVolume));
+    }
+  }catch(e){}
+}
+function saveAudioSettings(){
+  try{localStorage.setItem(AUDIO_KEY,JSON.stringify({sound,bgmEnabled,sfxVolume,bgmVolume}))}catch(e){}
+}
+function applyAudioSettings(){
+  Object.values(SFX).forEach(a=>a.volume=sfxVolume);
+  BGM.volume=bgmVolume;
+  if($('soundBtn'))$('soundBtn').textContent='♫ 효과음: '+(sound?'켜짐':'꺼짐');
+  if($('bgmBtn'))$('bgmBtn').textContent='♬ 배경음악: '+(bgmEnabled?'켜짐':'꺼짐');
+  if($('sfxVolume'))$('sfxVolume').value=String(Math.round(sfxVolume*100));
+  if($('bgmVolume'))$('bgmVolume').value=String(Math.round(bgmVolume*100));
+  if($('sfxVolumeValue'))$('sfxVolumeValue').textContent=Math.round(sfxVolume*100)+'%';
+  if($('bgmVolumeValue'))$('bgmVolumeValue').textContent=Math.round(bgmVolume*100)+'%';
+}
+function tryStartBgm(){
+  if(!bgmEnabled)return;
+  BGM.volume=bgmVolume;
+  const p=BGM.play();
+  if(p&&p.catch)p.catch(()=>{});
+}
+function setBgmEnabled(enabled){
+  bgmEnabled=enabled;
+  if(bgmEnabled)tryStartBgm();else BGM.pause();
+  applyAudioSettings();saveAudioSettings();
+}
+function playSfx(name){if(!sound||!SFX[name])return;const a=SFX[name];a.volume=sfxVolume;a.currentTime=0;a.play().catch(()=>{})}
 function toast(text){$('toast').textContent=text}
 function shuffled(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function randomMenu(){return MENU[Math.floor(Math.random()*MENU.length)].id}
@@ -267,15 +307,19 @@ function finishTutorial(){
 }
 function closeTutorial(){tutorialIndex=-1;tutorialResumeAfter=false;tutorialPausedAt=0;$('tutorialLayer').classList.add('hidden')}
 
-$('coverStartBtn').addEventListener('click',()=>{playSfx('button');startFromCover()});
-$('coverHelpBtn').addEventListener('click',()=>{playSfx('button');tutorialFromMainCover()});
+$('coverStartBtn').addEventListener('click',()=>{tryStartBgm();playSfx('button');startFromCover()});
+$('coverHelpBtn').addEventListener('click',()=>{tryStartBgm();playSfx('button');tutorialFromMainCover()});
 $('serveBtn').addEventListener('click',serve);
 $('resetCup').addEventListener('click',refundCup);
 $('undoBtn').addEventListener('click',undoOne);
 $('restartBoardBtn').addEventListener('click',restartImmediately);
 $('settingsBtn').addEventListener('click',()=>{$('settingsMenu').classList.toggle('hidden');playSfx('button')});
 $('helpBtn').addEventListener('click',()=>{playSfx('button');startTutorial()});
-$('soundBtn').addEventListener('click',()=>{sound=!sound;$('soundBtn').textContent='♫ 효과음: '+(sound?'켜짐':'꺼짐');if(sound)playSfx('button')});
+$('soundBtn').addEventListener('click',()=>{sound=!sound;applyAudioSettings();saveAudioSettings();if(sound)playSfx('button')});
+$('bgmBtn').addEventListener('click',()=>{setBgmEnabled(!bgmEnabled);if(sound)playSfx('button')});
+$('sfxVolume').addEventListener('input',e=>{sfxVolume=Number(e.target.value)/100;applyAudioSettings();saveAudioSettings()});
+$('sfxVolume').addEventListener('change',()=>{if(sound)playSfx('button')});
+$('bgmVolume').addEventListener('input',e=>{bgmVolume=Number(e.target.value)/100;applyAudioSettings();saveAudioSettings();if(bgmEnabled)tryStartBgm()});
 $('clearRankingBtn').addEventListener('click',()=>{if(confirm('이 브라우저에 저장된 랭킹 기록을 모두 삭제할까요?')){try{localStorage.removeItem(RANK_KEY)}catch(e){}renderRankingSection();playSfx('button')}});
 $('modalHelpBtn').addEventListener('click',()=>{playSfx('button');startTutorial()});
 $('modalConfirm').addEventListener('click',()=>{
@@ -291,8 +335,11 @@ $('tutorialNext').addEventListener('click',tutorialNext);
 $('tutorialExit').addEventListener('click',finishTutorial);
 window.addEventListener('resize',()=>{fitGameCanvas();if(tutorialIndex>=0)positionTutorial()});
 window.addEventListener('scroll',()=>{if(tutorialIndex>=0)positionTutorial()},{passive:true});
-document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('#serveBtn,#resetCup,#undoBtn,#restartBoardBtn,#settingsBtn,#helpBtn,#soundBtn,#modalHelpBtn,#modalConfirm,#modalClose,#rankSubmit,#clearRankingBtn,#tutorialNext,#tutorialExit,.ingredient'))playSfx('button')});
+document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('#serveBtn,#resetCup,#undoBtn,#restartBoardBtn,#settingsBtn,#helpBtn,#soundBtn,#bgmBtn,#sfxVolume,#bgmVolume,#modalHelpBtn,#modalConfirm,#modalClose,#rankSubmit,#clearRankingBtn,#tutorialNext,#tutorialExit,.ingredient'))playSfx('button')});
 
+loadAudioSettings();
+applyAudioSettings();
 resetGame();
 fitGameCanvas();
 showCover();
+tryStartBgm();

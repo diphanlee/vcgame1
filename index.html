@@ -29,6 +29,15 @@
     <div class="settings-menu hidden" id="settingsMenu">
       <button class="ui-sfx" id="helpBtn">📖 게임 방법</button>
       <button class="ui-sfx" id="soundBtn">♫ 효과음: 켜짐</button>
+      <label class="audio-control" for="sfxVolume">
+        <span>효과음 볼륨</span><output id="sfxVolumeValue">58%</output>
+        <input id="sfxVolume" type="range" min="0" max="100" value="58" step="1">
+      </label>
+      <button class="ui-sfx" id="bgmBtn">♬ 배경음악: 켜짐</button>
+      <label class="audio-control" for="bgmVolume">
+        <span>BGM 볼륨</span><output id="bgmVolumeValue">24%</output>
+        <input id="bgmVolume" type="range" min="0" max="100" value="24" step="1">
+      </label>
     </div>
 
     <aside class="score-board" id="scoreBoard">
